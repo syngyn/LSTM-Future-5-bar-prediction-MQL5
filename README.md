@@ -88,7 +88,7 @@ Click "Next" and "Finish"
 
 Step 3.3: Find Your Data Folder
 
-In MetaTrader, press Ctrl + Shift + D (opens data folder)
+In MetaTrader, clickfile → Open data Folder
 You should see a folder that opens with a long name like:
 C:\Users\YourName\AppData\Roaming\MetaQuotes\Terminal\ABC123DEF456\
 Keep this folder open - you'll need it soon!
