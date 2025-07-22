@@ -6,7 +6,7 @@
 //+------------------------------------------------------------------+
 
 #property copyright "Jason.W.Rusk@gmail.com 2025"
-#property version   "1.86" // Fixed Multi-Step Accuracy Tracking
+#property version   "1.87" // CRITICAL FIX: Feature generation and daemon communication
 
 #include <Trade/Trade.mqh>
 #include <Files/File.mqh>
@@ -56,8 +56,6 @@ input int    ADX_Threshold = 25;
 input group    "Model & Data Settings"
 input int    AccuracyLookaheadBars = 5;
 input int    AccuracyLookbackOnInit = 60;
-input string Symbol_EURJPY = "EURJPY", Symbol_USDJPY = "USDJPY", Symbol_GBPUSD = "GBPUSD";
-input string Symbol_EURGBP = "EURGBP", Symbol_USDCAD = "USDCAD", Symbol_USDCHF = "USDCHF";
 input int    RequestTimeout = 5000;
 
 // --- Constants ---
@@ -69,7 +67,11 @@ input int    RequestTimeout = 5000;
 #define BACKTEST_PREDICTIONS_FILE "backtest_predictions.csv"
 
 // --- Global Handles & Variables ---
-int atr_handle, macd_handle, rsi_handle, stoch_handle, cci_handle, adx_handle, bb_handle;
+// ** NEW/MODIFIED INDICATOR HANDLES to match Python script **
+int atr_handle, macd_handle, rsi_handle, adx_handle;
+int ma_handle_5, ma_handle_10, ma_handle_20;
+int stdev_handle_10;
+
 CTrade trade;
 enum ENUM_PREDICTION_DIRECTION { DIR_BULLISH, DIR_BEARISH, DIR_NEUTRAL };
 
@@ -102,7 +104,7 @@ int    g_RequiredConsistentSteps, g_StaticStopLossPips, g_StaticTakeProfitPips, 
 bool   g_EnableTimeBasedExit, g_EnableTrailingStop, g_EnableADXFilter;
 
 //+------------------------------------------------------------------+
-//| --- GUI PANEL FUNCTIONS ---
+//| --- GUI PANEL FUNCTIONS (Unchanged) ---
 //+------------------------------------------------------------------+
 void CreateDisplayPanel()
 {
@@ -226,7 +228,7 @@ void DeleteDisplayPanel()
 }
 
 //+------------------------------------------------------------------+
-//| --- IMPROVED ACCURACY TRACKING FUNCTIONS ---
+//| --- IMPROVED ACCURACY TRACKING FUNCTIONS (Unchanged) ---
 //+------------------------------------------------------------------+
 void AddStepPredictions(const double &predicted_prices[], datetime current_bar_time)
 {
@@ -379,7 +381,7 @@ void CheckStepPredictionAccuracy()
 }
 
 //+------------------------------------------------------------------+
-//| --- CORE HELPER FUNCTIONS ---
+//| --- CORE HELPER FUNCTIONS (Partially Changed) ---
 //+------------------------------------------------------------------+
 void InitializeParameters()
 {
@@ -512,13 +514,37 @@ bool JsonGetValue(const string &json_string, const string &key, double &out_valu
    return true;
 }
 
+// ** NEW: SendToDaemon with enhanced communication payload **
 bool SendToDaemon(const double &features[], double current_price, double atr_val, DaemonResponse &response)
 {
    string request_id = GenerateRequestID();
    string filename = "request_" + request_id + ".json";
    string response_file = "response_" + request_id + ".json";
-   string json = StringFormat("{\r\n  \"request_id\": \"%s\",\r\n  \"action\": \"predict_combined\",\r\n  \"current_price\": %.5f,\r\n  \"atr\": %.5f,\r\n  \"features\": [",
-                              request_id, current_price, atr_val);
+
+   // Enhanced JSON payload with more context for the daemon
+   string json = StringFormat("{\r\n"
+                              "  \"request_id\": \"%s\",\r\n"
+                              "  \"action\": \"predict_combined\",\r\n"
+                              "  \"symbol\": \"%s\",\r\n"
+                              "  \"timeframe\": \"%s\",\r\n"
+                              "  \"current_price\": %.5f,\r\n"
+                              "  \"atr\": %.5f,\r\n"
+                              "  \"ea_time\": \"%s\",\r\n"
+                              "  \"server_time\": \"%s\",\r\n"
+                              "  \"local_time\": \"%s\",\r\n"
+                              "  \"current_bar_time\": \"%s\",\r\n"
+                              "  \"features\": [",
+                              request_id,
+                              _Symbol,
+                              EnumToString(Period()),
+                              current_price,
+                              atr_val,
+                              TimeToString(TimeCurrent(), TIME_DATE|TIME_SECONDS),
+                              TimeToString(TimeTradeServer(), TIME_DATE|TIME_SECONDS),
+                              TimeToString(TimeLocal(), TIME_DATE|TIME_SECONDS),
+                              TimeToString(iTime(_Symbol, PERIOD_H1, 0), TIME_DATE|TIME_SECONDS)
+                              );
+                              
    for(int i = 0; i < ArraySize(features); i++) 
       json += DoubleToString(features[i], 8) + (i < ArraySize(features) - 1 ? ", " : "");
    json += "]\r\n}";
@@ -736,7 +762,7 @@ void CalculateImprovedInitialAccuracy()
 //+------------------------------------------------------------------+
 int OnInit()
 {
-   Print("=== Siobhan EA v1.86 Initializing ===");
+   Print("=== Siobhan EA v1.87 Initializing (Feature-Corrected) ===");
    InitializeParameters();
    
    if(MQLInfoInteger(MQL_TESTER) || g_AccuracyLookbackOnInit > 0)
@@ -752,20 +778,22 @@ int OnInit()
    }
    EnsureDataFolderExists();
    
-   string symbols[]={Symbol_EURJPY,Symbol_USDJPY,Symbol_GBPUSD,Symbol_EURGBP,Symbol_USDCAD,Symbol_USDCHF};
-   for(int i=0;i<ArraySize(symbols);i++) SymbolSelect(symbols[i],true);
+   // ** NEW: Initialize indicator handles that match the Python training script **
+   atr_handle = iATR(_Symbol, PERIOD_H1, g_ATR_Period);
+   macd_handle = iMACD(_Symbol, PERIOD_H1, 12, 26, 9, PRICE_CLOSE);
+   rsi_handle = iRSI(_Symbol, PERIOD_H1, 14, PRICE_CLOSE);
+   adx_handle = iADX(_Symbol, PERIOD_H1, g_ADX_Period);
    
-   atr_handle=iATR(_Symbol,PERIOD_H1,g_ATR_Period);
-   macd_handle=iMACD(_Symbol,PERIOD_H1,12,26,9,PRICE_CLOSE);
-   rsi_handle=iRSI(_Symbol,PERIOD_H1,14,PRICE_CLOSE);
-   stoch_handle=iStochastic(_Symbol,PERIOD_H1,14,3,3,MODE_SMA,STO_LOWHIGH);
-   cci_handle=iCCI(_Symbol,PERIOD_H1,20,PRICE_TYPICAL);
-   adx_handle=iADX(_Symbol,PERIOD_H1,g_ADX_Period);
-   bb_handle = iBands(_Symbol, PERIOD_H1, 20, 0, 2, PRICE_CLOSE);
-   
-   if(atr_handle==INVALID_HANDLE||macd_handle==INVALID_HANDLE||rsi_handle==INVALID_HANDLE||stoch_handle==INVALID_HANDLE||cci_handle==INVALID_HANDLE||adx_handle==INVALID_HANDLE||bb_handle==INVALID_HANDLE)
+   ma_handle_5 = iMA(_Symbol, PERIOD_H1, 5, 0, MODE_SMA, PRICE_CLOSE);
+   ma_handle_10 = iMA(_Symbol, PERIOD_H1, 10, 0, MODE_SMA, PRICE_CLOSE);
+   ma_handle_20 = iMA(_Symbol, PERIOD_H1, 20, 0, MODE_SMA, PRICE_CLOSE);
+   stdev_handle_10 = iStdDev(_Symbol, PERIOD_H1, 10, 0, MODE_SMA, PRICE_CLOSE);
+
+   if(atr_handle == INVALID_HANDLE || macd_handle == INVALID_HANDLE || rsi_handle == INVALID_HANDLE ||
+      adx_handle == INVALID_HANDLE || ma_handle_5 == INVALID_HANDLE || ma_handle_10 == INVALID_HANDLE ||
+      ma_handle_20 == INVALID_HANDLE || stdev_handle_10 == INVALID_HANDLE)
    { 
-      Print("FATAL: Failed to create one or more indicator handles."); 
+      Print("FATAL: Failed to create one or more required indicator handles."); 
       return(INIT_FAILED); 
    }
      
@@ -789,10 +817,11 @@ void OnDeinit(const int reason)
    IndicatorRelease(atr_handle); 
    IndicatorRelease(macd_handle); 
    IndicatorRelease(rsi_handle);
-   IndicatorRelease(stoch_handle); 
-   IndicatorRelease(cci_handle); 
    IndicatorRelease(adx_handle);
-   IndicatorRelease(bb_handle);
+   IndicatorRelease(ma_handle_5);
+   IndicatorRelease(ma_handle_10);
+   IndicatorRelease(ma_handle_20);
+   IndicatorRelease(stdev_handle_10);
    DeleteDisplayPanel(); 
    Comment("");
 }
@@ -861,54 +890,66 @@ void OnTick()
    }
    else
    {
+      // ** CRITICAL FIX: REWRITTEN FEATURE GENERATION TO MATCH PYTHON SCRIPT **
       double features[FEATURE_COUNT * SEQ_LEN];
-      int data_needed = SEQ_LEN + 30;
-      MqlRates rates[]; 
+      int data_needed = SEQ_LEN + 30; // Extra buffer for indicator calculations
+      
+      MqlRates rates[];
       if(CopyRates(_Symbol, PERIOD_H1, 1, data_needed, rates) < data_needed) return;
-      double macd[],rsi[],stoch_k[],cci[],upper_bb[],lower_bb[],atr[],ej_c[],uj_c[],gu_c[],eg_c[],uc_c[],uchf_c[];
-      if(CopyBuffer(macd_handle,0,1,data_needed,macd)<data_needed||CopyBuffer(rsi_handle,0,1,data_needed,rsi)<data_needed||
-         CopyBuffer(stoch_handle,0,1,data_needed,stoch_k)<data_needed||CopyBuffer(cci_handle,0,1,data_needed,cci)<data_needed||
-         CopyBuffer(bb_handle,1,1,data_needed,upper_bb)<data_needed||CopyBuffer(bb_handle,2,1,data_needed,lower_bb)<data_needed||
-         CopyBuffer(atr_handle,0,1,data_needed,atr)<data_needed) return;
-      if(CopyClose(Symbol_EURJPY,PERIOD_H1,1,data_needed,ej_c)<data_needed||CopyClose(Symbol_USDJPY,PERIOD_H1,1,data_needed,uj_c)<data_needed||
-         CopyClose(Symbol_GBPUSD,PERIOD_H1,1,data_needed,gu_c)<data_needed||CopyClose(Symbol_EURGBP,PERIOD_H1,1,data_needed,eg_c)<data_needed||
-         CopyClose(Symbol_USDCAD,PERIOD_H1,1,data_needed,uc_c)<data_needed||CopyClose(Symbol_USDCHF,PERIOD_H1,1,data_needed,uchf_c)<data_needed) return;
-         
-      int feature_index=0;
-      for(int i=SEQ_LEN-1; i>=0; i--)
+
+      double macd[], rsi[], ma5[], ma10[], ma20[], stdev10[];
+      if(CopyBuffer(macd_handle, 0, 1, data_needed, macd) < data_needed ||
+         CopyBuffer(rsi_handle, 0, 1, data_needed, rsi) < data_needed ||
+         CopyBuffer(ma_handle_5, 0, 1, data_needed, ma5) < data_needed ||
+         CopyBuffer(ma_handle_10, 0, 1, data_needed, ma10) < data_needed ||
+         CopyBuffer(ma_handle_20, 0, 1, data_needed, ma20) < data_needed ||
+         CopyBuffer(stdev_handle_10, 0, 1, data_needed, stdev10) < data_needed)
       {
-         double eurusd_ret=(rates[i].close/rates[i+1].close)-1.0;
-         features[feature_index++]=eurusd_ret; 
-         features[feature_index++]=(double)rates[i].tick_volume;
-         features[feature_index++]=atr[i]; 
-         features[feature_index++]=macd[i]; 
-         features[feature_index++]=rsi[i];
-         features[feature_index++]=stoch_k[i]; 
-         features[feature_index++]=cci[i];
-         MqlDateTime dt;
-         TimeToStruct(rates[i].time,dt);
-         features[feature_index++]=(double)dt.hour; 
-         features[feature_index++]=(double)dt.day_of_week;
-         double eurjpy_ret=(ej_c[i]/ej_c[i+1])-1.0, usdjpy_ret=(uj_c[i]/uj_c[i+1])-1.0, gbpusd_ret=(gu_c[i]/gu_c[i+1])-1.0;
-         double eurgbp_ret=(eg_c[i]/eg_c[i+1])-1.0, usdcad_ret=(uc_c[i]/uc_c[i+1])-1.0, usdchf_ret=(uchf_c[i]/uchf_c[i+1])-1.0;
-         features[feature_index++]=(usdjpy_ret+usdcad_ret+usdchf_ret)-(eurusd_ret+gbpusd_ret);
-         features[feature_index++]=eurusd_ret+eurjpy_ret+eurgbp_ret;
-         features[feature_index++]=-(eurjpy_ret+usdjpy_ret);
-         features[feature_index++]=(upper_bb[i]-lower_bb[i])/(rates[i].close+1e-10);
-         features[feature_index++]=(double)rates[i].tick_volume-(double)rates[i+5].tick_volume;
-         double body=MathAbs(rates[i].close-rates[i].open); 
-         double range=rates[i].high-rates[i].low; 
-         double bar_type=0;
-         if(range>0&&(body/range)<0.1)bar_type=1.0;
-         if(rates[i].close>rates[i].open&&rates[i].open<rates[i+1].open&&rates[i].close>rates[i+1].close)bar_type=2.0;
-         if(rates[i].close<rates[i].open&&rates[i].open>rates[i+1].open&&rates[i].close<rates[i+1].close)bar_type=-2.0;
-         bar_type+=(rates[i].open-rates[i+1].close)/(atr[i]+1e-10);
-         features[feature_index++]=bar_type;
+         Print("Failed to copy indicator buffers for feature generation.");
+         return;
       }
+         
+      int feature_index = 0;
+      for(int i = SEQ_LEN - 1; i >= 0; i--)
+      {
+         // Price returns (5 features)
+         for(int k = 1; k <= 5; k++)
+         {
+            if(rates[i+k].close > 1e-10)
+               features[feature_index++] = rates[i].close / rates[i+k].close - 1.0;
+            else
+               features[feature_index++] = 0.0;
+         }
+         
+         // Moving averages ratio (3 features)
+         if(ma5[i] > 1e-10) features[feature_index++] = (rates[i].close - ma5[i]) / ma5[i]; else features[feature_index++] = 0.0;
+         if(ma10[i] > 1e-10) features[feature_index++] = (rates[i].close - ma10[i]) / ma10[i]; else features[feature_index++] = 0.0;
+         if(ma20[i] > 1e-10) features[feature_index++] = (rates[i].close - ma20[i]) / ma20[i]; else features[feature_index++] = 0.0;
+
+         // Volatility (2 features)
+         if(ma10[i] > 1e-10) features[feature_index++] = stdev10[i] / ma10[i]; else features[feature_index++] = 0.0;
+         if(rates[i].close > 1e-10) features[feature_index++] = (rates[i].high - rates[i].low) / rates[i].close; else features[feature_index++] = 0.0;
+
+         // RSI (1 feature) - Normalized
+         features[feature_index++] = (rsi[i] - 50.0) / 50.0;
+
+         // MACD (1 feature) - Normalized
+         if(rates[i].close > 1e-10) features[feature_index++] = macd[i] / rates[i].close; else features[feature_index++] = 0.0;
+
+         // Time features (3 features)
+         MqlDateTime dt;
+         TimeToStruct(rates[i].time, dt);
+         features[feature_index++] = MathSin(2 * M_PI * dt.hour / 24.0);
+         features[feature_index++] = MathCos(2 * M_PI * dt.hour / 24.0);
+         features[feature_index++] = MathSin(2 * M_PI * dt.day_of_week / 7.0);
+      }
+      
+      double current_atr[];
+      if(CopyBuffer(atr_handle, 0, 1, 1, current_atr) < 1) return;
         
       MqlTick tick; 
       if(!SymbolInfoTick(_Symbol, tick)) return;
-      if(SendToDaemon(features, tick.ask, atr[0], response))
+      if(SendToDaemon(features, tick.ask, current_atr[0], response))
       { 
          got_prediction = true; 
       }

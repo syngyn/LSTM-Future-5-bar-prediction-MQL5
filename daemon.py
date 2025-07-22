@@ -559,7 +559,7 @@ class EnhancedLSTMDaemon:
                     if self.model_type == "enhanced":
                         reg_out, class_logits, uncertainty, confidence, _ = model(scaled_tensor)
                         all_uncertainties.append(uncertainty.cpu().numpy()[0])
-                        all_confidences.append(float(confidence.cpu().numpy()[0]))
+                        all_confidences.appendfloat(confidence.cpu().numpy().item())
                     else:
                         reg_out, class_logits = model(scaled_tensor)
                         # Create dummy uncertainty and confidence for original model
