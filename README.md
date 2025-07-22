@@ -107,10 +107,7 @@ save daemon.py in your LSTM_trading Folder
 
 save train_enhanced_model.py in your LSTM_trading folder
 
-save train_enhanced_model.py in your LSTM_Trading folder
-
-
-File 3: fix_csv_timezone.py
+save timecsv.py in your LSTM_Trading folder
 
 
 Step 4 : Create Required Folders
@@ -123,20 +120,18 @@ Your folder should now look like:
 LSTM_Trading/
 ├── daemon.py
 ├── train_enhanced_model.py  
-├── fix_csv_timezone.py
+├── timecsv.py
 ├── models/ (empty folder)
 └── data/ (empty folder)
 
 📊 PART 5: GETTING TRAINING DATA
 Step 5.1: Export Data from MetaTrader
 
-In MetaTrader, press F2 (opens History Center)
-Expand "Forex" → Find "EURUSD"
-Click on "H1" (1 hour timeframe)
+In MetaTrader 5, click view → Symbols 
+choose EURUSD → Bars tab → H1 → select the dates you want to download and push Request
 Click "Export" button
 Navigate to your LSTM_Trading folder
 Save as: EURUSD60.csv
-Close History Center
 
 Step 5.2: Fix the Data Format
 
@@ -145,7 +140,7 @@ Navigate to your folder:
 bashcd "C:\Users\YourName\AppData\Roaming\MetaQuotes\Terminal\YOUR_FOLDER_ID\MQL5\Files\LSTM_Trading"
 (Replace YourName and YOUR_FOLDER_ID with your actual paths)
 Run the CSV fixer:
-bashpython fix_csv_timezone.py
+bashpython timecsv.py
 
 Follow the prompts:
 
@@ -184,15 +179,10 @@ Verify Python libraries are installed
 
 
 🤖 PART 7: SETTING UP THE EXPERT ADVISOR
-Step 7.1: Create the Expert Advisor File
+Step 7.1: Compile Expert Advisor File
 
-In MetaTrader, press F4 (opens MetaEditor)
-Click "File" → "New"
-Select "Expert Advisor (template)" → Next
-Name: LSTM_Enhanced_EA → Next → Next → Finish
-Delete all the template code
-Copy and paste the complete EA code from the artifacts above
-Save (Ctrl + S)
+In MetaTrader 5, click on tools and select MetaQuotes Language Editor
+Open the GGTH.mq5 file
 Click "Compile" button (or press F7)
 Should see: "0 error(s), 0 warning(s)" at bottom
 Close MetaEditor
@@ -202,7 +192,7 @@ Step 7.2: Start the Daemon
 Open Command Prompt as administrator
 Navigate to LSTM_Trading folder (same as before)
 Run daemon:
-bashpython daemon.py
+python daemon.py
 
 
 Should see:
@@ -215,7 +205,7 @@ Step 7.3: Attach EA to Chart
 
 In MetaTrader, open EURUSD H1 chart
 In Navigator panel (left side), find "Expert Advisors"
-Drag "LSTM_Enhanced_EA" onto the EURUSD chart
+Drag "GGTH" onto the EURUSD chart
 In settings dialog:
 
 ✅ Check "Allow automated trading"
