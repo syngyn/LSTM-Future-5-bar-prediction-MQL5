@@ -98,7 +98,7 @@ Keep this folder open - you'll need it soon!
 Step 4.1: Create Project Folder
 
 In the MetaTrader data folder (from Step 3.3)
-Go to: MQL5\Files\
+Go to: C:\Users\YourName\AppData\Roaming\MetaQuotes\Terminal\ABC123DEF456\MQL5\Files\
 Create new folder: Right-click → New → Folder
 Name it: LSTM_Trading
 Open the LSTM_Trading folder
@@ -119,38 +119,13 @@ data (right-click → New → Folder → name it "data")
 Your folder should now look like:
 LSTM_Trading/
 ├── daemon.py
+├── backtest_predictions.py
 ├── train_enhanced_model.py  
-├── timecsv.py
 ├── models/ (empty folder)
 └── data/ (empty folder)
 
 📊 PART 5: GETTING TRAINING DATA
-Step 5.1: Export Data from MetaTrader
-
-In MetaTrader 5, click view → Symbols 
-choose EURUSD → Bars tab → H1 → select the dates you want to download and push Request
-Click "Export" button
-Navigate to your LSTM_Trading folder
-Save as: EURUSD60.csv
-
-Step 5.2: Fix the Data Format
-
-Open Command Prompt as administrator (Windows key → cmd → right-click → Run as admin)
-Navigate to your folder:
-bashcd "C:\Users\YourName\AppData\Roaming\MetaQuotes\Terminal\YOUR_FOLDER_ID\MQL5\Files\LSTM_Trading"
-(Replace YourName and YOUR_FOLDER_ID with your actual paths)
-Run the CSV fixer:
-bashpython timecsv.py
-
-Follow the prompts:
-
-When asked "Do you want to convert timezone?" → Type y and press Enter
-Select your broker's timezone (probably 2 or 3 for European brokers)
-When asked "Replace original file?" → Type y and press Enter
-
-
-Should see: ✅ Successfully replaced EURUSD60.csv
-
+Place all the currency pair CSV files in your LSTM_Trading folder
 
 🧠 PART 6: TRAINING THE MODEL
 Step 6.1: Run Training Script
@@ -177,6 +152,12 @@ Check that EURUSD60.csv exists and has data
 Make sure you're in the correct folder
 Verify Python libraries are installed
 
+To use strategy tester 
+
+in cmd prompt run 
+python backtest_predictions.py
+take the backtest_predictions.csv file and place it here
+C:\Users\username\AppData\Roaming\MetaQuotes\Terminal\Common\Files
 
 🤖 PART 7: SETTING UP THE EXPERT ADVISOR
 Step 7.1: Compile Expert Advisor File
