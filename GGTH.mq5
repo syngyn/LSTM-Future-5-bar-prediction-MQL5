@@ -6,7 +6,7 @@
 //+------------------------------------------------------------------+
 
 #property copyright "Jason.W.Rusk@gmail.com 2025"
-#property version   "1.99" // Fixed time synchronization with daemon
+#property version   "1.99" // 
 
 #include <Trade/Trade.mqh>
 #include <Files/File.mqh>
