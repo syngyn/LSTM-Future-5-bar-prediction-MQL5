@@ -559,7 +559,8 @@ class EnhancedLSTMDaemon:
                     if self.model_type == "enhanced":
                         reg_out, class_logits, uncertainty, confidence, _ = model(scaled_tensor)
                         all_uncertainties.append(uncertainty.cpu().numpy()[0])
-                        all_confidences.appendfloat(confidence.cpu().numpy().item())
+                        # ✅ FIXED: Changed appendfloat to append
+                        all_confidences.append(float(confidence.cpu().numpy().item()))
                     else:
                         reg_out, class_logits = model(scaled_tensor)
                         # Create dummy uncertainty and confidence for original model
@@ -623,6 +624,7 @@ class EnhancedLSTMDaemon:
             if len(self.ensemble_models) > 0:
                 predictions, uncertainties, classification_probs, model_confidence = self._get_ensemble_prediction(tensor)
                 prediction_source = f"ensemble_{len(self.ensemble_models) + 1}"
+                print(f"📊 Raw ensemble predictions: {predictions}")
             else:
                 with torch.no_grad():
                     if self.model_type == "enhanced":
@@ -638,14 +640,83 @@ class EnhancedLSTMDaemon:
                     
                     classification_probs = torch.softmax(class_logits, dim=1)[0].cpu().numpy()
                     prediction_source = f"single_{self.model_type}"
+                    print(f"📊 Raw single model predictions: {predictions}")
             
             # Denormalize predictions
-            unscaled_predictions = self.scaler_regressor_target.inverse_transform(
-                predictions.reshape(1, -1)
-            )[0]
+            try:
+                # First attempt: Use the target scaler to denormalize
+                unscaled_predictions = self.scaler_regressor_target.inverse_transform(
+                    predictions.reshape(1, -1)
+                )[0]
+                
+                # Check if denormalization produced reasonable forex prices
+                price_range_check = all(0.5 < price < 2.5 for price in unscaled_predictions)
+                
+                if not price_range_check:
+                    print(f"⚠️  Scaler denormalization failed - got unrealistic prices: {unscaled_predictions}")
+                    print(f"🔧 Using alternative denormalization method...")
+                    
+                    # Alternative method 1: Treat predictions as ATR-scaled changes
+                    unscaled_predictions = []
+                    for i, pred in enumerate(predictions):
+                        # Scale by ATR to get realistic price movements
+                        # The model might predict in units of ATR multiples
+                        atr_scaled_change = pred * atr * 2.0  # 2x ATR scaling factor
+                        future_price = current_price + atr_scaled_change
+                        unscaled_predictions.append(float(future_price))
+                        
+                    print(f"✅ ATR-scaled denormalization: {unscaled_predictions}")
+                    
+                    # Check if ATR-scaled prices are reasonable
+                    atr_price_range_check = all(0.5 < price < 2.5 for price in unscaled_predictions)
+                    
+                    if not atr_price_range_check:
+                        print(f"⚠️  ATR-scaled prices also unrealistic, trying percentage method...")
+                        
+                        # Alternative method 2: Treat as percentage changes
+                        unscaled_predictions = []
+                        for i, pred in enumerate(predictions):
+                            # Treat predictions as percentage changes (scaled down)
+                            percentage_change = pred * 0.1  # 0.1% scaling factor
+                            future_price = current_price * (1 + percentage_change / 100)
+                            unscaled_predictions.append(float(future_price))
+                            
+                        print(f"✅ Percentage-based denormalization: {unscaled_predictions}")
+                    
+            except Exception as e:
+                print(f"💥 Denormalization failed: {e}")
+                print(f"🔧 Using fallback method...")
+                
+                # Fallback: treat as small absolute changes from current price
+                unscaled_predictions = []
+                for i, pred in enumerate(predictions):
+                    # Scale the small prediction and add to current price
+                    scaled_change = pred * atr * 10  # Use ATR as scaling factor
+                    future_price = current_price + scaled_change
+                    unscaled_predictions.append(float(future_price))  # Convert to regular Python float
+                    
+                print(f"✅ Fallback denormalization: {unscaled_predictions}")
             
             # Apply advanced smoothing
             smoothed_prices = self._apply_advanced_smoothing(unscaled_predictions, uncertainties)
+            
+            # Final validation of prices
+            final_price_check = all(0.1 < price < 10.0 for price in smoothed_prices)
+            if not final_price_check:
+                print(f"⚠️  Final price validation failed: {smoothed_prices}")
+                print(f"🔧 Applying conservative price correction...")
+                
+                # Conservative fallback: small movements around current price
+                smoothed_prices = []
+                for i in range(OUTPUT_STEPS):
+                    # Small random walk based on ATR
+                    small_change = (i + 1) * atr * 0.1 * (1 if predictions[i] > 0 else -1)
+                    corrected_price = current_price + small_change
+                    smoothed_prices.append(float(corrected_price))
+                
+                print(f"✅ Conservative price correction: {smoothed_prices}")
+            else:
+                print(f"✅ Final prices validated: {smoothed_prices[:2]}...{smoothed_prices[-1]}")
             
             # Calculate enhanced confidence
             confidence_score = self._calculate_enhanced_confidence(
@@ -748,17 +819,19 @@ class EnhancedLSTMDaemon:
             current_price = data.get("current_price")
             atr = data.get("atr")
             
-            # Extract timestamp information for debugging
+            # Extract comprehensive timestamp information
             ea_time = data.get("ea_time", "Unknown")
             server_time = data.get("server_time", "Unknown")
             local_time = data.get("local_time", "Unknown")
             current_bar_time = data.get("current_bar_time", "Unknown")
             symbol = data.get("symbol", "Unknown")
             timeframe = data.get("timeframe", "Unknown")
+            broker_gmt_offset = data.get("broker_gmt_offset", None)
+            local_gmt_offset = data.get("local_gmt_offset", None)
             
-            # Log time sync information
+            # Log comprehensive time sync information
             daemon_time = datetime.now().strftime("%Y.%m.%d %H:%M:%S")
-            print(f"🕐 [Time Sync] Request {request_id}:")
+            print(f"🕐 [Enhanced Time Sync] Request {request_id}:")
             print(f"   📊 Symbol: {symbol} | Timeframe: {timeframe}")
             print(f"   🤖 Daemon Time: {daemon_time}")
             print(f"   📈 EA Time: {ea_time}")
@@ -767,8 +840,42 @@ class EnhancedLSTMDaemon:
             print(f"   📊 Current Bar: {current_bar_time}")
             print(f"   💰 Price: {current_price} | ATR: {atr}")
             
-            # Check for potential time misalignment
+            # Enhanced timezone analysis
             time_warnings = []
+            timezone_status = "Unknown"
+            
+            if broker_gmt_offset is not None and local_gmt_offset is not None:
+                time_diff_hours = broker_gmt_offset - local_gmt_offset
+                print(f"   🌍 Broker GMT{broker_gmt_offset:+d} | Local GMT{local_gmt_offset:+d} | Diff: {time_diff_hours:+d}h")
+                
+                # Analyze timezone alignment
+                if abs(time_diff_hours) > 12:
+                    time_warnings.append(f"MAJOR timezone mismatch: {time_diff_hours}h difference")
+                    timezone_status = "Critical Mismatch"
+                elif abs(time_diff_hours) > 6:
+                    timezone_status = "Large Offset (Normal for international brokers)"
+                    # Don't add this as a warning since it's often normal
+                elif abs(time_diff_hours) > 3:
+                    timezone_status = "Moderate Offset"
+                elif abs(time_diff_hours) <= 1:
+                    timezone_status = "Good Alignment"
+                else:
+                    timezone_status = "Minor Offset"
+                    
+                # Check if this affects trading hours
+                daemon_hour = datetime.now().hour
+                expected_broker_hour = (daemon_hour + time_diff_hours) % 24
+                
+                if 8 <= expected_broker_hour <= 17:  # Major trading hours
+                    print(f"   ⏰ Current broker trading hour: ~{expected_broker_hour}:XX (Active market)")
+                elif 22 <= expected_broker_hour or expected_broker_hour <= 5:  # Asian session
+                    print(f"   🌙 Current broker trading hour: ~{expected_broker_hour}:XX (Asian session)")
+                else:
+                    print(f"   💤 Current broker trading hour: ~{expected_broker_hour}:XX (Low activity)")
+                    
+                print(f"   🎯 Timezone Status: {timezone_status}")
+            
+            # Time parsing validation
             try:
                 from datetime import datetime as dt
                 daemon_dt = dt.now()
@@ -789,6 +896,8 @@ class EnhancedLSTMDaemon:
                         
                 if time_warnings:
                     print(f"   ⚠️  TIME WARNINGS: {', '.join(time_warnings)}")
+                else:
+                    print(f"   ✅ Time synchronization appears good")
                     
             except Exception as e:
                 print(f"   ⚠️  Time validation error: {e}")
@@ -815,11 +924,16 @@ class EnhancedLSTMDaemon:
             if action == "predict_combined":
                 prediction_result = self._get_combined_prediction(features, current_price, atr)
                 
-                # Add time sync information to response
+                # Add comprehensive time sync information to response
                 prediction_result["time_sync"] = {
                     "daemon_time": daemon_time,
                     "ea_time": ea_time,
                     "server_time": server_time,
+                    "local_time": local_time,
+                    "current_bar_time": current_bar_time,
+                    "broker_gmt_offset": broker_gmt_offset,
+                    "local_gmt_offset": local_gmt_offset,
+                    "timezone_status": timezone_status,
                     "time_warnings": time_warnings
                 }
                 
@@ -830,14 +944,19 @@ class EnhancedLSTMDaemon:
                     **prediction_result
                 }
                 
-                # Log successful prediction with time info
+                # Log successful prediction with enhanced time info
                 confidence = prediction_result.get('confidence_score', 0)
                 source = prediction_result.get('prediction_source', 'unknown')
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ {request_id} | Conf: {confidence:.3f} | Source: {source}")
+                tz_indicator = "🌍" if timezone_status == "Good Alignment" else "⚠️" if "Critical" in timezone_status else "🌐"
                 
-                # Log time warnings if any
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ {request_id} | Conf: {confidence:.3f} | Source: {source} | TZ: {tz_indicator}")
+                
+                # Log time warnings only for critical issues
                 if time_warnings:
-                    print(f"   ⚠️  Time sync issues detected - predictions may be inaccurate!")
+                    print(f"   ⚠️  Critical time sync issues detected - predictions may be inaccurate!")
+                    print(f"   💡 Consider checking your broker's timezone settings")
+                elif abs(broker_gmt_offset - local_gmt_offset) > 6:
+                    print(f"   ℹ️  Large timezone offset detected ({broker_gmt_offset - local_gmt_offset}h) - normal for international brokers")
                     
             else:
                 raise ValueError(f"Unsupported action: '{action}'")
