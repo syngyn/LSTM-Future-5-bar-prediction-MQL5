@@ -155,8 +155,10 @@ Verify Python libraries are installed
 To use strategy tester 
 
 in cmd prompt run 
-python backtest_predictions.py
-take the backtest_predictions.csv file and place it here
+pip install yfinance pandas numpy torch scikit-learn joblib
+Those packages are required to run the backtest now run
+python generate_backtest.py
+take the .csv file and place it here
 C:\Users\username\AppData\Roaming\MetaQuotes\Terminal\Common\Files
 
 🤖 PART 7: SETTING UP THE EXPERT ADVISOR
