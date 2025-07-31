@@ -107,7 +107,7 @@ save daemon.py in your LSTM_trading Folder
 
 save train_enhanced_model.py in your LSTM_trading folder
 
-save timecsv.py in your LSTM_Trading folder
+save generate_backtest.py in your LSTM_trading Folder
 
 
 Step 4 : Create Required Folders
@@ -119,13 +119,13 @@ data (right-click → New → Folder → name it "data")
 Your folder should now look like:
 LSTM_Trading/
 ├── daemon.py
-├── backtest_predictions.py
+├── generate_backtest.py
 ├── train_enhanced_model.py  
 ├── models/ (empty folder)
 └── data/ (empty folder)
 
 📊 PART 5: GETTING TRAINING DATA
-Place all the currency pair CSV files in your LSTM_Trading folder
+Place all the currency pair CSV files in your LSTM_Trading folder EURUSD60.csv, USDJPY60.csv, EURGBP60.csv, USDCHF60.csv, EURJPY60.csv, USDCAD60.csv
 
 🧠 PART 6: TRAINING THE MODEL
 Step 6.1: Run Training Script
@@ -148,7 +148,7 @@ Creates files in the "models" folder
 
 ❌ If errors occur:
 
-Check that EURUSD60.csv exists and has data
+Check that all listed csv files exists and has data
 Make sure you're in the correct folder
 Verify Python libraries are installed
 
@@ -156,6 +156,7 @@ To use strategy tester
 
 in cmd prompt run 
 pip install yfinance pandas numpy torch scikit-learn joblib
+
 Those packages are required to run the backtest now run
 python generate_backtest.py
 take the .csv file and place it here
