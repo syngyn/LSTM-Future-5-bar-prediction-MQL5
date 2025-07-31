@@ -37,7 +37,7 @@ OUTPUT_STEPS = 5
 NUM_CLASSES = 3
 
 # Backtest parameters
-BACKTEST_MONTHS = 6  # How many months of data to generate
+BACKTEST_MONTHS = 0  # 0 = Use entire dataset
 MIN_CONFIDENCE = 0.3  # Minimum confidence for realistic backtesting
 
 # --- ENHANCED MODEL ARCHITECTURE (must match daemon.py) ---
@@ -256,42 +256,127 @@ class BacktestGenerator:
             print("ℹ️  No ensemble models found (using single model)")
             
     def download_data(self):
-        """Download historical EURUSD data"""
-        print("📊 Downloading historical EURUSD data...")
+        """Load historical EURUSD data from the training dataset"""
+        print("📊 Loading EURUSD data from training dataset...")
         
-        # Calculate date range
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=BACKTEST_MONTHS * 30 + 60)  # Extra margin for feature calculation
+        # Look for the EURUSD60.csv file in the same directory
+        data_file = "EURUSD60.csv"
+        data_path = os.path.join(SCRIPT_DIR, data_file)
+        
+        if not os.path.exists(data_path):
+            print(f"❌ {data_file} not found in {SCRIPT_DIR}")
+            print("💡 Please copy EURUSD60.csv to the same folder as this script")
+            print(f"🔧 Falling back to synthetic data...")
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=180)  # 6 months fallback
+            return self._generate_synthetic_data(start_date, end_date)
         
         try:
-            # Download EURUSD data from Yahoo Finance
-            ticker = "EURUSD=X"
-            data = yf.download(ticker, start=start_date, end=end_date, interval="1h", progress=False)
+            print(f"📁 Loading data from: {data_path}")
             
-            if data.empty:
-                raise ValueError("No data downloaded from Yahoo Finance")
-                
-            # Clean and prepare data
-            data = data.dropna()
-            data.index = pd.to_datetime(data.index)
+            # Load the CSV with proper settings for MT5 export format
+            df = pd.read_csv(data_path)
             
-            # Ensure we have OHLC columns
-            required_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
-            for col in required_columns:
-                if col not in data.columns:
-                    if col == 'Volume':
-                        data[col] = 1000  # Dummy volume for forex
-                    else:
-                        raise ValueError(f"Missing required column: {col}")
+            print(f"   Original shape: {df.shape}")
+            print(f"   Original columns: {list(df.columns)}")
             
-            print(f"✅ Downloaded {len(data)} hourly bars from {data.index[0]} to {data.index[-1]}")
-            return data
+            # Parse the Date column - handle different possible formats
+            try:
+                # Try standard datetime parsing first
+                df['Date'] = pd.to_datetime(df['Date'])
+            except:
+                try:
+                    # Try MT5 format: YYYY.MM.DD HH:MM:SS
+                    df['Date'] = pd.to_datetime(df['Date'], format='%Y.%m.%d %H:%M:%S')
+                except:
+                    # Last resort - let pandas figure it out
+                    df['Date'] = pd.to_datetime(df['Date'], infer_datetime_format=True)
+            
+            # Set Date as index
+            df = df.set_index('Date')
+            
+            # Rename columns to match expected format - keep original names priority
+            column_mapping = {}
+            
+            # Use TickVol as Volume if Volume column doesn't exist
+            if 'Volume' not in df.columns and 'TickVol' in df.columns:
+                column_mapping['TickVol'] = 'Volume'
+            elif 'Volume' not in df.columns and 'Vol' in df.columns:
+                column_mapping['Vol'] = 'Volume'
+            
+            if column_mapping:
+                df = df.rename(columns=column_mapping)
+            
+            # Ensure we have the required OHLC columns
+            required_columns = ['Open', 'High', 'Low', 'Close']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                raise ValueError(f"Missing required columns: {missing_columns}")
+            
+            # Add Volume if not present
+            if 'Volume' not in df.columns:
+                df['Volume'] = 1000  # Dummy volume
+                print("   Added dummy Volume column")
+            
+            # Sort by date to ensure chronological order
+            df = df.sort_index()
+            
+            # Remove any duplicates
+            df = df[~df.index.duplicated(keep='first')]
+            
+            # **USE ENTIRE DATASET - No filtering by months**
+            print(f"   Using entire dataset: {len(df)} bars")
+            
+            # Clean data - remove NaN values
+            original_len = len(df)
+            df = df.dropna()
+            if len(df) < original_len:
+                print(f"   Removed {original_len - len(df)} rows with NaN values")
+            
+            # Basic data validation
+            if len(df) < 1000:
+                raise ValueError(f"Insufficient data: only {len(df)} bars after cleaning")
+            
+            # Ensure proper data types
+            for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+            
+            # Remove any rows that became NaN after numeric conversion
+            df = df.dropna()
+            
+            # Final validation - check for realistic forex prices
+            price_min, price_max = df['Close'].min(), df['Close'].max()
+            if price_min < 0.5 or price_max > 3.0:
+                print(f"⚠️  Unusual price range: {price_min:.5f} - {price_max:.5f}")
+            
+            print(f"✅ Loaded {len(df)} hourly bars from {df.index[0]} to {df.index[-1]}")
+            print(f"   Price range: {price_min:.5f} - {price_max:.5f}")
+            print(f"   Final columns: {list(df.columns)}")
+            
+            return df
             
         except Exception as e:
-            print(f"💥 Failed to download data: {e}")
-            print("💡 Trying alternative data source...")
+            print(f"💥 Failed to load EURUSD60.csv: {e}")
+            print(f"🔧 Error details: {str(e)}")
             
-            # Fallback: Generate synthetic data for testing
+            # Print more diagnostic info
+            try:
+                df_debug = pd.read_csv(data_path, nrows=5)
+                print(f"🔍 First 5 rows preview:")
+                print(df_debug.head())
+            except Exception as debug_e:
+                print(f"🔍 Could not read file for debugging: {debug_e}")
+            
+            print(f"💡 Please ensure EURUSD60.csv is in the correct format:")
+            print(f"   - Columns: Date, Open, High, Low, Close, TickVol, Vol, Spread")
+            print(f"   - Date format: YYYY.MM.DD HH:MM:SS or standard datetime")
+            print(f"🔄 Falling back to synthetic data...")
+            
+            # Fallback to synthetic data
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=180)  # 6 months fallback
             return self._generate_synthetic_data(start_date, end_date)
     
     def _generate_synthetic_data(self, start_date, end_date):
@@ -306,6 +391,7 @@ class BacktestGenerator:
         num_bars = len(dates)
         
         # Random walk with mean reversion
+        np.random.seed(42)  # For reproducible results
         returns = np.random.normal(0, 0.0005, num_bars)  # 0.05% hourly volatility
         prices = [base_price]
         
@@ -317,13 +403,26 @@ class BacktestGenerator:
         
         # Create OHLC data
         data = pd.DataFrame(index=dates)
+        data.index.name = 'Datetime'
+        
         data['Close'] = prices
         data['Open'] = data['Close'].shift(1).fillna(data['Close'].iloc[0])
-        data['High'] = data[['Open', 'Close']].max(axis=1) + np.random.uniform(0, 0.0003, num_bars)
-        data['Low'] = data[['Open', 'Close']].min(axis=1) - np.random.uniform(0, 0.0003, num_bars)
+        
+        # Generate realistic high/low
+        noise_high = np.random.uniform(0, 0.0003, num_bars)
+        noise_low = np.random.uniform(0, 0.0003, num_bars)
+        
+        data['High'] = data[['Open', 'Close']].max(axis=1) + noise_high
+        data['Low'] = data[['Open', 'Close']].min(axis=1) - noise_low
         data['Volume'] = np.random.randint(1000, 5000, num_bars)
         
+        # Ensure High >= Close >= Low and High >= Open >= Low
+        data['High'] = data[['High', 'Open', 'Close']].max(axis=1)
+        data['Low'] = data[['Low', 'Open', 'Close']].min(axis=1)
+        
         print(f"✅ Generated {len(data)} synthetic bars")
+        print(f"   Price range: {data['Close'].min():.5f} - {data['Close'].max():.5f}")
+        
         return data
     
     def create_features(self, data):
@@ -332,80 +431,129 @@ class BacktestGenerator:
         
         df = data.copy()
         
-        # Technical indicators
-        # RSI
-        delta = df['Close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(14).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
-        rs = gain / loss
-        df['rsi'] = 100 - (100 / (1 + rs))
+        # Ensure proper index
+        if not isinstance(df.index, pd.DatetimeIndex):
+            df.index = pd.to_datetime(df.index)
         
-        # MACD
-        ema12 = df['Close'].ewm(span=12).mean()
-        ema26 = df['Close'].ewm(span=26).mean()
-        df['macd'] = ema12 - ema26
+        print(f"   Data shape: {df.shape}")
+        print(f"   Columns: {list(df.columns)}")
         
-        # Stochastic
-        lowest_low = df['Low'].rolling(14).min()
-        highest_high = df['High'].rolling(14).max()
-        df['stoch_k'] = 100 * (df['Close'] - lowest_low) / (highest_high - lowest_low)
-        
-        # CCI
-        tp = (df['High'] + df['Low'] + df['Close']) / 3
-        ma_tp = tp.rolling(20).mean()
-        mad = tp.rolling(20).apply(lambda x: np.mean(np.abs(x - x.mean())))
-        df['cci'] = (tp - ma_tp) / (0.015 * mad)
-        
-        # ATR
-        high_low = df['High'] - df['Low']
-        high_close = abs(df['High'] - df['Close'].shift(1))
-        low_close = abs(df['Low'] - df['Close'].shift(1))
-        true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-        df['atr'] = true_range.rolling(14).mean()
-        
-        # Bollinger Bands
-        bb_ma = df['Close'].rolling(20).mean()
-        bb_std = df['Close'].rolling(20).std()
-        df['bb_upper'] = bb_ma + (bb_std * 2)
-        df['bb_lower'] = bb_ma - (bb_std * 2)
-        
-        # Time features
-        df['hour'] = df.index.hour
-        df['day_of_week'] = df.index.dayofweek
-        
-        # Price returns
-        df['price_return'] = df['Close'].pct_change()
-        
-        # Currency basket features (simplified - using EUR and USD proxies)
-        df['usd_strength'] = df['Close'].pct_change().rolling(5).mean()  # Simplified USD strength
-        df['eur_strength'] = -df['usd_strength']  # Inverse for EUR
-        df['jpy_strength'] = df['Close'].pct_change().rolling(3).mean() * 0.5  # Simplified JPY
-        
-        # Volume features
-        df['volume_change'] = df['Volume'] - df['Volume'].shift(5)
-        
-        # Candlestick patterns
-        body = abs(df['Close'] - df['Open'])
-        range_size = df['High'] - df['Low']
-        df['candle_type'] = 0
-        
-        # Doji-like patterns
-        doji_mask = (range_size > 0) & (body / range_size < 0.1)
-        df.loc[doji_mask, 'candle_type'] = 1
-        
-        # Engulfing patterns (simplified)
-        bullish_engulf = (df['Close'] > df['Open']) & (df['Open'] < df['Open'].shift(1)) & (df['Close'] > df['Close'].shift(1))
-        bearish_engulf = (df['Close'] < df['Open']) & (df['Open'] > df['Open'].shift(1)) & (df['Close'] < df['Close'].shift(1))
-        
-        df.loc[bullish_engulf, 'candle_type'] = 2
-        df.loc[bearish_engulf, 'candle_type'] = -2
-        
-        # Add gap component
-        gap = (df['Open'] - df['Close'].shift(1)) / (df['atr'] + 1e-10)
-        df['candle_type'] += gap
-        
-        print(f"✅ Created features for {len(df)} bars")
-        return df
+        try:
+            # Technical indicators
+            # RSI
+            delta = df['Close'].diff()
+            gain = (delta.where(delta > 0, 0)).rolling(14).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
+            rs = gain / loss
+            df['rsi'] = 100 - (100 / (1 + rs))
+            
+            # MACD
+            ema12 = df['Close'].ewm(span=12).mean()
+            ema26 = df['Close'].ewm(span=26).mean()
+            df['macd'] = ema12 - ema26
+            
+            # Stochastic
+            lowest_low = df['Low'].rolling(14).min()
+            highest_high = df['High'].rolling(14).max()
+            df['stoch_k'] = 100 * (df['Close'] - lowest_low) / (highest_high - lowest_low)
+            
+            # CCI
+            tp = (df['High'] + df['Low'] + df['Close']) / 3
+            ma_tp = tp.rolling(20).mean()
+            mad = tp.rolling(20).apply(lambda x: np.mean(np.abs(x - x.mean())))
+            df['cci'] = (tp - ma_tp) / (0.015 * mad)
+            
+            # ATR
+            high_low = df['High'] - df['Low']
+            high_close = abs(df['High'] - df['Close'].shift(1))
+            low_close = abs(df['Low'] - df['Close'].shift(1))
+            true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+            df['atr'] = true_range.rolling(14).mean()
+            
+            # Bollinger Bands
+            bb_ma = df['Close'].rolling(20).mean()
+            bb_std = df['Close'].rolling(20).std()
+            df['bb_upper'] = bb_ma + (bb_std * 2)
+            df['bb_lower'] = bb_ma - (bb_std * 2)
+            
+            # Time features
+            df['hour'] = df.index.hour
+            df['day_of_week'] = df.index.dayofweek
+            
+            # Price returns
+            df['price_return'] = df['Close'].pct_change()
+            
+            # Currency basket features (simplified - using EUR and USD proxies)
+            df['usd_strength'] = df['Close'].pct_change().rolling(5).mean()  # Simplified USD strength
+            df['eur_strength'] = -df['usd_strength']  # Inverse for EUR
+            df['jpy_strength'] = df['Close'].pct_change().rolling(3).mean() * 0.5  # Simplified JPY
+            
+            # Volume features
+            df['volume_change'] = df['Volume'] - df['Volume'].shift(5)
+            
+            # Candlestick patterns - Fixed version
+            df['candle_type'] = 0.0  # Initialize with zeros
+            
+            body = abs(df['Close'] - df['Open'])
+            range_size = df['High'] - df['Low']
+            
+            # Avoid division by zero
+            range_size = range_size.replace(0, 1e-10)
+            
+            # Doji-like patterns - use .iloc for safer indexing
+            doji_condition = (body / range_size) < 0.1
+            df.loc[doji_condition, 'candle_type'] = 1.0
+            
+            # Engulfing patterns (simplified) - use safer boolean indexing
+            bullish_engulf = (
+                (df['Close'] > df['Open']) & 
+                (df['Open'] < df['Open'].shift(1)) & 
+                (df['Close'] > df['Close'].shift(1))
+            )
+            
+            bearish_engulf = (
+                (df['Close'] < df['Open']) & 
+                (df['Open'] > df['Open'].shift(1)) & 
+                (df['Close'] < df['Close'].shift(1))
+            )
+            
+            # Use .iloc for safer assignment
+            df.loc[bullish_engulf, 'candle_type'] = 2.0
+            df.loc[bearish_engulf, 'candle_type'] = -2.0
+            
+            # Add gap component - avoid division by zero
+            gap = (df['Open'] - df['Close'].shift(1)) / (df['atr'] + 1e-10)
+            df['candle_type'] = df['candle_type'] + gap.fillna(0)
+            
+            # Clean up any infinite or NaN values
+            df = df.replace([np.inf, -np.inf], np.nan)
+            df = df.fillna(method='ffill').fillna(0)
+            
+            print(f"✅ Created features for {len(df)} bars")
+            return df
+            
+        except Exception as e:
+            print(f"💥 Feature creation failed: {e}")
+            print("🔧 Using simplified feature set...")
+            
+            # Fallback to basic features only
+            df['rsi'] = 50.0  # Neutral RSI
+            df['macd'] = 0.0
+            df['stoch_k'] = 50.0
+            df['cci'] = 0.0
+            df['atr'] = df['Close'] * 0.001  # 0.1% of price
+            df['bb_upper'] = df['Close'] * 1.01
+            df['bb_lower'] = df['Close'] * 0.99
+            df['hour'] = df.index.hour
+            df['day_of_week'] = df.index.dayofweek
+            df['price_return'] = df['Close'].pct_change().fillna(0)
+            df['usd_strength'] = 0.0
+            df['eur_strength'] = 0.0
+            df['jpy_strength'] = 0.0
+            df['volume_change'] = 0.0
+            df['candle_type'] = 0.0
+            
+            return df
     
     def create_sequences(self, df):
         """Create sequences for model prediction"""
@@ -716,6 +864,22 @@ def main():
     """Main execution function"""
     print("🎯 GGTH LSTM Backtest Data Generator")
     print("=" * 50)
+    print("📊 Using your original EURUSD training data for accurate backtesting")
+    print()
+    
+    # Check if EURUSD60.csv exists
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    data_file = os.path.join(script_dir, "EURUSD60.csv")
+    
+    if not os.path.exists(data_file):
+        print("⚠️  SETUP REQUIRED:")
+        print(f"   📁 Please copy 'EURUSD60.csv' to: {script_dir}")
+        print(f"   💡 This ensures backtest uses the same data your model was trained on")
+        print(f"   🔄 Script will use synthetic data as fallback if file not found")
+        print()
+    else:
+        print(f"✅ Found EURUSD60.csv - will use original training data")
+        print()
     
     try:
         generator = BacktestGenerator()
@@ -723,6 +887,12 @@ def main():
         
         if result:
             print(f"\n✅ SUCCESS! Backtest data ready at: {result}")
+            print(f"\n📋 Next Steps:")
+            print(f"1. Copy backtest_predictions.csv to your MT5/Common/Files/ folder")
+            print(f"2. Open MT5 Strategy Tester")
+            print(f"3. Select GGTH EA")
+            print(f"4. Set date range within the generated period")
+            print(f"5. Run backtest with real model predictions!")
         else:
             print(f"\n❌ FAILED! Check error messages above.")
             
