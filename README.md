@@ -125,7 +125,7 @@ LSTM_Trading/
 └── data/ (empty folder)
 
 📊 PART 5: GETTING TRAINING DATA
-Place all the currency pair CSV files in your LSTM_Trading folder EURUSD60.csv, USDJPY60.csv, EURGBP60.csv, USDCHF60.csv, EURJPY60.csv, USDCAD60.csv
+Place all the currency pair CSV files in your LSTM_Trading folder EURUSD60.csv, USDJPY60.csv, EURGBP60.csv, USDCHF60.csv, EURJPY60.csv, USDCAD60.csv, USDCHF.csv
 
 🧠 PART 6: TRAINING THE MODEL
 Step 6.1: Run Training Script
@@ -185,6 +185,7 @@ Should see:
 ✅ Loaded 3 ensemble models
 🎯 Enhanced LSTM Daemon v2.1 is running!
 ⚠️ LEAVE THIS WINDOW OPEN - the daemon must run continuously
+
 Step 7.3: Attach EA to Chart
 
 In MetaTrader, open EURUSD H1 chart
@@ -193,14 +194,10 @@ Drag "GGTH" onto the EURUSD chart
 In settings dialog:
 
 ✅ Check "Allow automated trading"
-✅ Check "Allow DLL imports"
+
 Set IsLSTMActive = true
 Set EnableDetailedLogging = true
 Click OK
-
-
-Should see: 😊 smiley face in top-right corner of chart
-
 
 🎯 PART 8: TESTING THE SYSTEM
 Step 8.1: Check if Everything Works
@@ -273,7 +270,7 @@ Step 10.1: Daily Checks
 Every day, check:
 
 Daemon is still running (Command Prompt window open)
-EA is active (smiley face on chart)
+EA is active
 Confidence scores are reasonable (0.5+)
 Predictions update every hour
 
