@@ -44,7 +44,7 @@ input ENUM_STOP_LOSS_MODE   StopLossMode = SL_ATR_BASED;
 input ENUM_TAKE_PROFIT_MODE TakeProfitMode = TP_REGRESSION_TARGET;
 input bool   UseMarketOrderForTP = false;
 input double RiskPercent = 3.0;
-input double MinimumRiskRewardRatio = 1.5;
+input double MinimumRiskRewardRatio = 1.1;
 input int    StaticStopLossPips = 300;
 input int    StaticTakeProfitPips = 400;
 input int    ATR_Period = 14;
@@ -59,10 +59,10 @@ input double TrailingStartPips = 12.0;
 input double TrailingStopPips = 3.0;
 
 input group    "Confidence & Filters"
-input double MinimumModelConfidence = 0.40;
-input double MinimumSignalConfidence = 0.80;
-input double ClassificationSignalThreshold = 0.60;
-input int    RequiredConsistentSteps = 4;
+input double MinimumModelConfidence = 0.30;
+input double MinimumSignalConfidence = 0.60;
+input double ClassificationSignalThreshold = 0.40;
+input int    RequiredConsistentSteps = 5;
 input bool   EnableADXFilter = true;
 input int    ADX_Period = 14;
 input int    ADX_Threshold = 25;
@@ -74,7 +74,7 @@ input int    AccuracyWindowBars = 24;
 input string Symbol_EURJPY = "EURJPY", Symbol_USDJPY = "USDJPY", Symbol_GBPUSD = "GBPUSD";
 input string Symbol_EURGBP = "EURGBP", Symbol_USDCAD = "USDCAD", Symbol_USDCHF = "USDCHF";
 input int    RequestTimeout = 15000;
-input int    PredictionUpdateMinutes = 60;
+input int    PredictionUpdateMinutes = 1;
 
 // --- Constants ---
 #define PREDICTION_STEPS 5
