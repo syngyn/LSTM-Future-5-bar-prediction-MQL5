@@ -1,7 +1,7 @@
 # GGTH LSTM-Future-5-bar-prediction-MQL5- adaptive learning and dual strategy scalping expert advisor
 Updated LSTM MQL5 ai trading bot by Jason Rusk jason.w.rusk@gmail.com
 
-This ea has over 3000 lines of code and took me month and weeks to build. I've spent a tremendous amount of time building it. The only thing I ask in return is if you use it, to test it and find the optimal settings that work for you. Please send me the setting files so I can locate the best setting for the next version I will build which will be modular and easier to upgrade. I think you will find this expert advisor to be extrordinary but I need everyones help dialing this in. Thanks in advance. Good luck and remember pigs get fat and hogs get slaughtered. Anotherwords don't be greedy and jack the risk settings up. 
+This ea has over 3000 lines of code. The only thing I ask in return is if you use it, to test it and find the optimal settings that work for you. Please send me the setting files so I can locate the best setting for the next version I will build which will be modular and easier to upgrade. I think you will find this expert advisor to be extrordinary but I need everyones help dialing this in. Thanks in advance. Good luck and remember pigs get fat and hogs get slaughtered. Anotherwords don't be greedy and jack the risk settings up. 
 
 🚀 Complete GGTH LSTM Expert Advisor Installation Guide
 
