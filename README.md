@@ -1,5 +1,8 @@
-# LSTM-Future-5-bar-prediction-MQL5
-Updated LSTM MQL5 ai trading bot
+# GGTH LSTM-Future-5-bar-prediction-MQL5- adaptive learning and dual strategy scalping expert advisor
+Updated LSTM MQL5 ai trading bot by Jason Rusk jason.w.rusk@gmail.com
+
+This ea has over 3000 lines of code and took me month and weeks to build. I've spent a tremendous amount of time building it. The only thing I ask in return is if you use it, to test it and find the optimal settings that work for you. Please send me the setting files so I can locate the best setting for the next version I will build which will be modular and easier to upgrade. I think you will find this expert advisor to be extrordinary but I need everyones help dialing this in. Thanks in advance. Good luck and remember pigs get fat and hogs get slaughtered. Anotherwords don't be greedy and jack the risk settings up. 
+
 🚀 Complete GGTH LSTM Expert Advisor Installation Guide
 
 📋 What You'll Have After This Guide:
@@ -59,7 +62,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 ⏳ Wait 2-5 minutes (installing PyTorch)
 pip install pandas numpy scikit-learn
 ⏳ Wait 1-2 minutes
-bashpip install joblib watchdog
+pip install joblib watchdog
 ⏳ Wait 30 seconds
 
 Step 2.3: Verify Installation
@@ -159,14 +162,14 @@ pip install yfinance pandas numpy torch scikit-learn joblib
 
 Those packages are required to run the backtest now run
 python generate_backtest.py
-take the .csv file and place it here
+IMPORTANT!!!! take the .csv file it creates and place it here
 C:\Users\username\AppData\Roaming\MetaQuotes\Terminal\Common\Files
 
 🤖 PART 7: SETTING UP THE EXPERT ADVISOR
 Step 7.1: Compile Expert Advisor File
 
 In MetaTrader 5, click on tools and select MetaQuotes Language Editor
-Open the GGTH.mq5 file
+Open the GGTH8-25.mq5 file
 Click "Compile" button (or press F7)
 Should see: "0 error(s), 0 warning(s)" at bottom
 Close MetaEditor
@@ -195,9 +198,6 @@ In settings dialog:
 
 ✅ Check "Allow automated trading"
 
-Set IsLSTMActive = true
-Set EnableDetailedLogging = true
-Click OK
 
 🎯 PART 8: TESTING THE SYSTEM
 Step 8.1: Check if Everything Works
@@ -217,8 +217,8 @@ Good Signs: ✅
 
 Confidence scores 0.6-0.9
 Source: "ensemble_4"
-No timezone warnings
-Predictions every hour
+You may get a timezone offset warning but it wil adjust on its own.
+Predictions every hour or every minute you can decide in settings
 
 Bad Signs: ❌
 
@@ -254,7 +254,7 @@ Set IsLSTMActive = true in EA settings
 Solution:
 
 Retrain model: python train_enhanced_model.py
-Check timezone conversion was successful
+Check timezone matches ea
 Ensure you have recent data (last few months)
 
 ❌ Daemon crashes or stops
@@ -307,8 +307,8 @@ What Your System Does:
 ✅ Uses ensemble models for robust predictions
 Quick Reference Commands:
 Start daemon: python daemon.py
-Retrain model: python train_enhanced_model.py
-Fix data: python fix_csv_timezone.py
+Retrain model weekly with newest currency pair data: python train_enhanced_model.py
+
 Important Files Location:
 MetaTrader Data Folder\MQL5\Files\LSTM_Trading\
 ├── daemon.py (must be running)
