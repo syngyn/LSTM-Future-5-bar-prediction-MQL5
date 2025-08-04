@@ -156,7 +156,7 @@ Make sure you're in the correct folder
 Verify Python libraries are installed
 
 To use strategy tester 
-
+VERY IMPORTANT!!!!!!!!!!!!!!!
 in cmd prompt run 
 pip install yfinance pandas numpy torch scikit-learn joblib
 
@@ -164,6 +164,8 @@ Those packages are required to run the backtest now run
 python generate_backtest.py
 IMPORTANT!!!! take the .csv file it creates and place it here
 C:\Users\username\AppData\Roaming\MetaQuotes\Terminal\Common\Files
+VERY VERY IMPORTANT!!!!!!!!!
+Now to properly train the Ai you must run strategy tester many times each with a different date range. start off smnall like 6 months then expand the dates by a month with each run. Continue to do this until the Ai has a good understanding of at least the last 5 years..
 
 🤖 PART 7: SETTING UP THE EXPERT ADVISOR
 Step 7.1: Compile Expert Advisor File
