@@ -1,7 +1,21 @@
-# GGTH LSTM-Future-5-bar-prediction-MQL5- adaptive learning and dual strategy scalping expert advisor
-Updated LSTM MQL5 ai trading bot by Jason Rusk jason.w.rusk@gmail.com
+# GGTH LSTM-Future-5-bar-prediction-MQL5- Adaptive learning and dual strategy scalping expert advisor
 
+Updated LSTM MQL5 ai trading bot by Jason Rusk 
+
+This ea is for the EURUSD 1H chart on Metatrader5 only. Future versions will contain more pairs.
 This expert advisor will adapt and learn to change its trading. It uses a LSTM neural network to predict prices and makes scalping trades based on these predictions. It will adapt and learn as it goes. VERY important to scroll down to how to use the strategy tester because this is how it will learn in the begining. Please take the time to train the ai properly.
+
+Future Planed Upgrades -
+Additional currency pairs
+Modular build with libraries
+Online Learning
+The option of using a matingale or grid strategy
+Better GUI
+Partial position closing
+Harmonic pattern recognition and strategy
+Candle pattern recognition and strategy
+
+If you want access to these future upgrades email me directly at jason.w.rusk@gmail.com
 
 🚀 Complete GGTH LSTM Expert Advisor Installation Guide
 
@@ -317,3 +331,4 @@ MetaTrader Data Folder\MQL5\Files\LSTM_Trading\
 ├── EURUSD60.csv (your training data)
 ├── models\ (contains trained AI models)
 └── data\ (communication with EA)
+
