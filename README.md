@@ -2,6 +2,10 @@
 
 Updated LSTM MQL5 ai trading bot by Jason Rusk 
 
+The path has been having issues
+
+Download the zip file This an easy install zip save it in your MQL5/files folder. Unzip it and in the command prompt run python install.py 
+
 This ea is for the EURUSD 1H chart on Metatrader5 only. Future versions will contain more pairs.
 This expert advisor will adapt and learn to change its trading. It uses a LSTM neural network to predict prices and makes scalping trades based on these predictions. It will adapt and learn as it goes. VERY important to scroll down to how to use the strategy tester because this is how it will learn in the begining. Please take the time to train the ai properly.
 
