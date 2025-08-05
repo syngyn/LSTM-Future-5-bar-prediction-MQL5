@@ -6,14 +6,14 @@ This ea is for the EURUSD 1H chart on Metatrader5 only. Future versions will con
 This expert advisor will adapt and learn to change its trading. It uses a LSTM neural network to predict prices and makes scalping trades based on these predictions. It will adapt and learn as it goes. VERY important to scroll down to how to use the strategy tester because this is how it will learn in the begining. Please take the time to train the ai properly.
 
 Future Planed Upgrades -
-Additional currency pairs
-Modular build with libraries
-Online Learning
-The option of using a matingale or grid strategy
-Better GUI
-Partial position closing
-Harmonic pattern recognition and strategy
-Candle pattern recognition and strategy
+Additional currency pairs,
+Modular build with libraries,
+Online Learning,
+The option of using a matingale or grid strategy,
+Better GUI,
+Partial position closing,
+Harmonic pattern recognition and strategy,
+Candle pattern recognition and strategy,
 
 If you want access to these future upgrades email me directly at jason.w.rusk@gmail.com
 
