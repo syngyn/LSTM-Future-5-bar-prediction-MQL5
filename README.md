@@ -107,7 +107,7 @@ MT5 EA → JSON Request → Python Daemon → LSTM Prediction → JSON Response 
 
 ### **Step 2: Run Universal Installer**
 1. **Open Command Prompt as Administrator** (type cmd in windows desktop search bar then right click on the command prompt and select run as adminstrator)
-2. **Navigate to folder**: type: `cd C:\GGTH\`
+2. **Navigate to folder**: type: `cd C:\User\USERNAME\GGTH\`
 3. **Run installer**:type: `python launcher.py`
 4. Select 4 to install
 
