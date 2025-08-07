@@ -1,5 +1,4 @@
-<artifacts>
-<artifact identifier="ea_description_guide" type="text/markdown" title="GGTH LSTM Expert Advisor - Complete Description & Installation Guide">
+
 # GGTH LSTM Expert Advisor v2.10 - Complete Guide
 
 ## 🤖 What Is This Expert Advisor?
@@ -198,6 +197,8 @@ The installer will automatically:
 2. **Copy** `backtest_predictions.csv` to MT5 Common Files folder C:\Users\username\AppData\Roaming\MetaQuotes\Terminal\Common\Files
 3. **Run Strategy Tester** with generated data for accurate historical testing the ai will learn from each test run you do.
 
+IMPORTANT!!!!
+To properly train the artificial intelligence you will need to run strategy tester approximately 10 passes but make sure you change the date range each time. I suggest 6 months, 1 year, 1.5 years, 2 years, 3, yearss, 4 and so on.
 ### **Strategy Tester Settings**
 - **Model**: Every tick based on real ticks
 - **Period**: Any period with sufficient data
