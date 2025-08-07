@@ -95,7 +95,7 @@ MT5 EA → JSON Request → Python Daemon → LSTM Prediction → JSON Response 
 2. Ensure you have these files:
    ```
    GGTH_LSTM/
-   ├── GGTH8-5.mq5                 # MetaTrader Expert Advisor
+   ├── GGTH.mq5                 # MetaTrader Expert Advisor
    ├── install.py                  # Universal installer
    ├── train_enhanced_model.py     # Neural network training
    ├── daemon.py                   # Prediction server
