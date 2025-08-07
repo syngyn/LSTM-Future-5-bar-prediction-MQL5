@@ -119,10 +119,12 @@ The installer will automatically:
 - ✅ Create launch shortcuts
 
 ### **Step 3: Copy Expert Advisor to MetaTrader**
-1. **Copy** `GGTH.mq5` to your MT5 Experts folder:
+1.**Copy** `GGTH.mq5` to your MT5 Experts folder:
    - Path: `C:\Users\[Username]\AppData\Roaming\MetaQuotes\Terminal\[ID]\MQL5\Experts\`
-2. **Restart MetaTrader 5**
-3. **Verify** the EA appears in Navigator → Expert Advisors
+2.  Start Metatrader5 and click on tools - Metaquotes Language editor.
+3.  In MetaQuotes Language editor open the GGTH.mq5 file and then "compile it"
+5. **Restart MetaTrader 5**
+6. **Verify** the EA appears in Navigator → Expert Advisors
 
 ### **Step 4: Train the Neural Network**
 1. **Option A - Use Launcher** (Recommended):
@@ -132,7 +134,6 @@ The installer will automatically:
 
 2. **Option B - Direct Command**:
    python train_enhanced_model.py
-
 
 **Training Process** (15-30 minutes):
 - Loads historical EURUSD data
