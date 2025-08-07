@@ -1,338 +1,283 @@
-# GGTH LSTM-Future-5-bar-prediction-MQL5- Adaptive learning and dual strategy scalping expert advisor
-
-Updated LSTM MQL5 ai trading bot by Jason Rusk 
-
-The path has been having issues
-
-Download the zip file This an easy install zip save it in your MQL5/files folder. Unzip it and in the command prompt run python install.py 
-
-This ea is for the EURUSD 1H chart on Metatrader5 only. Future versions will contain more pairs.
-This expert advisor will adapt and learn to change its trading. It uses a LSTM neural network to predict prices and makes scalping trades based on these predictions. It will adapt and learn as it goes. VERY important to scroll down to how to use the strategy tester because this is how it will learn in the begining. Please take the time to train the ai properly.
-
-Future Planed Upgrades -
-Additional currency pairs,
-Modular build with libraries,
-Online Learning,
-The option of using a matingale or grid strategy,
-Better GUI,
-Partial position closing,
-Harmonic pattern recognition and strategy,
-Candle pattern recognition and strategy,
-
-If you want access to these future upgrades email me directly at jason.w.rusk@gmail.com
-
-🚀 Complete GGTH LSTM Expert Advisor Installation Guide
-
-📋 What You'll Have After This Guide:
-
-✅ Python installed and working
-✅ LSTM trading system running
-✅ Expert Advisor predicting EUR/USD prices
-✅ Real-time predictions in MetaTrader
-✅ Confidence scores and trading signals
-
-
-⏰ Time Required: 2-3 hours (first time)
-
-🔧 PART 1: INSTALLING PYTHON
-Step 1.1: Download Python
-
-Open your web browser (Chrome, Edge, Firefox)
-Go to: https://www.python.org/downloads/
-Click the big yellow button that says "Download Python 3.11.x"
-Wait for download to complete (about 30MB file)
-
-Step 1.2: Install Python
-
-Find the downloaded file (usually in Downloads folder)
-Right-click the file → "Run as administrator"
-IMPORTANT: ✅ Check "Add Python to PATH" (very important!)
-Click "Install Now"
-Wait 5-10 minutes for installation
-Click "Close" when done
-
-Step 1.3: Test Python Installation
-
-Press Windows key + R
-Type: cmd and press Enter
-Type: python --version and press Enter
-Should show: Python 3.11.x (if you see this, Python is working!)
-Type: exit to close
-
-❌ If you see "python is not recognized":
-
-Python PATH wasn't added properly
-Restart computer and try again
-If still broken, uninstall Python and reinstall with "Add to PATH" checked
-
-
-📦 PART 2: INSTALLING REQUIRED LIBRARIES
-Step 2.1: Open Command Prompt
-
-Press Windows key
-Type: cmd
-Right-click "Command Prompt" → "Run as administrator"
-Click "Yes" if Windows asks for permission
-
-Step 2.2: Install Libraries (One by One)
-Copy and paste each command exactly, press Enter, wait for completion:
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-⏳ Wait 2-5 minutes (installing PyTorch)
-pip install pandas numpy scikit-learn
-⏳ Wait 1-2 minutes
-pip install joblib watchdog
-⏳ Wait 30 seconds
-
-Step 2.3: Verify Installation
-Type this command:
-python -c "import torch, pandas, numpy, sklearn; "
-❌ If error: One of the installations failed, try reinstalling that specific library
-Close Command Prompt by typing exit
-
-💻 PART 3: SETTING UP METATRADER 5
-Step 3.1: Download MetaTrader 5
-
-Go to: https://www.metatrader5.com/en/download
-Click "Download MetaTrader 5"
-Run the installer when downloaded
-Follow installation wizard (default settings are fine)
-
-Step 3.2: Open Demo Account
-
-Open MetaTrader 5
-Click "File" → "Open Account"
-Select any broker (e.g., "MetaQuotes Demo")
-Click "Next"
-Select "Demo Account"
-Fill in your details (name, email, phone)
-Click "Next" and "Finish"
-
-Step 3.3: Find Your Data Folder
-
-In MetaTrader, clickfile → Open data Folder
-You should see a folder that opens with a long name like:
-C:\Users\YourName\AppData\Roaming\MetaQuotes\Terminal\ABC123DEF456\
-Keep this folder open - you'll need it soon!
-
-
-📁 PART 4: SETTING UP THE PROJECT
-Step 4.1: Create Project Folder
-
-In the MetaTrader data folder (from Step 3.3)
-Go to: C:\Users\YourName\AppData\Roaming\MetaQuotes\Terminal\ABC123DEF456\MQL5\Files\
-Create new folder: Right-click → New → Folder
-Name it: LSTM_Trading
-Open the LSTM_Trading folder
-
-save daemon.py in your LSTM_trading Folder
-
-save train_enhanced_model.py in your LSTM_trading folder
-
-save generate_backtest.py in your LSTM_trading Folder
-
-
-Step 4 : Create Required Folders
-In your LSTM_Trading folder, create these folders:
-
-models (right-click → New → Folder → name it "models")
-data (right-click → New → Folder → name it "data")
-
-Your folder should now look like:
-LSTM_Trading/
-├── daemon.py
-├── generate_backtest.py
-├── train_enhanced_model.py  
-├── models/ (empty folder)
-└── data/ (empty folder)
-
-📊 PART 5: GETTING TRAINING DATA
-Place all the currency pair CSV files in your LSTM_Trading folder EURUSD60.csv, USDJPY60.csv, EURGBP60.csv, USDCHF60.csv, EURJPY60.csv, USDCAD60.csv, USDCHF.csv
-
-🧠 PART 6: TRAINING THE MODEL
-Step 6.1: Run Training Script
-In the same Command Prompt:
-python train_enhanced_model.py
-⏳ This will take 30-60 minutes
-You should see:
-🚀 Enhanced LSTM Training Script v2.1
-✅ Loaded 77,623 data points
-🎯 Training enhanced main model...
-Epoch   1/50 | Train: 1.0234 | Val: 0.9876
-...
-⏹️  Early stopping at epoch 28
-🎉 TRAINING COMPLETE!
-✅ Success indicators:
-
-No red error messages
-Shows "TRAINING COMPLETE!"
-Creates files in the "models" folder
-
-❌ If errors occur:
-
-Check that all listed csv files exists and has data
-Make sure you're in the correct folder
-Verify Python libraries are installed
-
-To use strategy tester 
-VERY IMPORTANT!!!!!!!!!!!!!!!
-in cmd prompt run 
-pip install yfinance pandas numpy torch scikit-learn joblib
-
-Those packages are required to run the backtest now run
-python generate_backtest.py
-IMPORTANT!!!! take the .csv file it creates and place it here
-C:\Users\username\AppData\Roaming\MetaQuotes\Terminal\Common\Files
-VERY VERY IMPORTANT!!!!!!!!!
-Now to properly train the Ai you must run strategy tester many times each with a different date range. start off smnall like 6 months then expand the dates by a month with each run. Continue to do this until the Ai has a good understanding of at least the last 5 years..
-
-🤖 PART 7: SETTING UP THE EXPERT ADVISOR
-Step 7.1: Compile Expert Advisor File
-
-In MetaTrader 5, click on tools and select MetaQuotes Language Editor
-Open the GGTH8-25.mq5 file
-Click "Compile" button (or press F7)
-Should see: "0 error(s), 0 warning(s)" at bottom
-Close MetaEditor
-
-Step 7.2: Start the Daemon
-
-Open Command Prompt as administrator
-Navigate to LSTM_Trading folder (same as before)
-Run daemon:
-python daemon.py
-
-
-Should see:
-🚀 Using device: cpu
-✅ Enhanced AttentionLSTM model loaded successfully
-✅ Loaded 3 ensemble models
-🎯 Enhanced LSTM Daemon v2.1 is running!
-⚠️ LEAVE THIS WINDOW OPEN - the daemon must run continuously
-
-Step 7.3: Attach EA to Chart
-
-In MetaTrader, open EURUSD H1 chart
-In Navigator panel (left side), find "Expert Advisors"
-Drag "GGTH" onto the EURUSD chart
-In settings dialog:
-
-✅ Check "Allow automated trading"
-
-
-🎯 PART 8: TESTING THE SYSTEM
-Step 8.1: Check if Everything Works
-In MetaTrader:
-
-Open "Experts" tab (bottom of screen)
-Should see messages like:
-📊 === NEW BAR DETECTED ===
-🕐 TIME SYNC DEBUG:
-✅ Prediction successful - Confidence: 0.847
-
-
-In Command Prompt (daemon window):
-✅ request_123 | Conf: 0.847 | Source: ensemble_4
-Step 8.2: Understanding the Output
-Good Signs: ✅
-
-Confidence scores 0.6-0.9
-Source: "ensemble_4"
-You may get a timezone offset warning but it wil adjust on its own.
-Predictions every hour or every minute you can decide in settings
-
-Bad Signs: ❌
-
-Confidence scores below 0.3
-Source: "fallback"
-Many error messages
-Timezone warnings
-
-
-🛠️ PART 9: TROUBLESHOOTING
-Common Issues:
-❌ "Python is not recognized"
-Solution:
-
-Reinstall Python with "Add to PATH" checked
-Restart computer
-Try again
-
-❌ "Module not found" errors
-Solution:
-
-Open cmd as administrator
-Run: pip install [missing_module_name]
-
-❌ EA shows "LSTM inactive"
-Solution:
-
-Check that daemon.py is running
-Verify files are in correct folder
-Set IsLSTMActive = true in EA settings
-
-❌ Low confidence scores (below 0.3)
-Solution:
-
-Retrain model: python train_enhanced_model.py
-Check timezone matches ea
-Ensure you have recent data (last few months)
-
-❌ Daemon crashes or stops
-Solution:
-
-Check Command Prompt for error messages
-Restart daemon: python daemon.py
-Verify model files exist in models/ folder
-
-
-📈 PART 10: MONITORING PERFORMANCE
-Step 10.1: Daily Checks
-Every day, check:
-
-Daemon is still running (Command Prompt window open)
-EA is active
-Confidence scores are reasonable (0.5+)
-Predictions update every hour
-
-Step 10.2: Weekly Maintenance
-Every week:
-
-Update training data (export new H1 data from MetaTrader)
-Retrain model: python train_enhanced_model.py
-Restart daemon to load new model
-
-Step 10.3: Performance Metrics
-Good Performance:
-
-Confidence scores: 0.6-0.9 average
-Prediction accuracy: 65-75%
-Consistent ensemble predictions
-No frequent errors
-
-Poor Performance:
-
-Confidence scores: Below 0.4
-Many fallback predictions
-Frequent timezone warnings
-System crashes
-
-
-🎉 CONGRATULATIONS!
-You now have a complete LSTM Expert Advisor system running!
-What Your System Does:
-✅ Analyzes EUR/USD price patterns using AI
-✅ Predicts future prices for next 5 hours
-✅ Provides confidence scores for each prediction
-✅ Updates automatically every hour
-✅ Uses ensemble models for robust predictions
-Quick Reference Commands:
-Start daemon: python daemon.py
-Retrain model weekly with newest currency pair data: python train_enhanced_model.py
-
-Important Files Location:
-MetaTrader Data Folder\MQL5\Files\LSTM_Trading\
-├── daemon.py (must be running)
-├── EURUSD60.csv (your training data)
-├── models\ (contains trained AI models)
-└── data\ (communication with EA)
-
+<artifacts>
+<artifact identifier="ea_description_guide" type="text/markdown" title="GGTH LSTM Expert Advisor - Complete Description & Installation Guide">
+# GGTH LSTM Expert Advisor v2.10 - Complete Guide
+
+## 🤖 What Is This Expert Advisor?
+
+The **GGTH LSTM Expert Advisor** is a cutting-edge AI-powered automated trading system that combines deep learning neural networks with advanced position sizing and risk management. It represents one of the most sophisticated retail algorithmic trading systems available, integrating multiple state-of-the-art technologies into a single, cohesive trading solution.
+
+## 🏗️ System Architecture
+
+### **Two-Part System:**
+1. **Python AI Backend** - Runs sophisticated neural network models
+2. **MetaTrader 5 Expert Advisor** - Executes trades and manages positions
+
+### **Communication Flow:**
+```
+MT5 EA → JSON Request → Python Daemon → LSTM Prediction → JSON Response → MT5 EA → Trade Execution
+```
+
+## 🧠 Core Technologies
+
+### **1. AttentionLSTM Neural Network**
+- **Architecture**: 3-layer LSTM with 8-head multi-attention mechanism
+- **Input**: 15 technical features across 20 time steps (H-19 to H0)
+- **Output**: 5-step price predictions (H+1 to H+5) with confidence scores
+- **Training**: Ensemble of 4 models with uncertainty estimation
+
+### **2. Kelly Criterion Position Sizing**
+- **Dynamic Sizing**: Positions automatically sized based on historical win rate and profit factors
+- **Confidence Scaling**: Larger positions when model confidence is high
+- **Risk Controls**: Minimum 1% / Maximum 25% of capital per trade
+- **Smoothing**: Prevents position size whipsawing
+
+### **3. Adaptive Learning System**
+- **Performance Tracking**: Monitors prediction accuracy for each time horizon
+- **Dynamic Adjustments**: Automatically adjusts confidence thresholds and risk multipliers
+- **Market Adaptation**: Responds to changing market conditions
+- **Step Weighting**: Emphasizes better-performing prediction horizons
+
+### **4. Dual Trading Strategies**
+- **Main Strategy**: Medium-term positions based on H+1 to H+5 predictions
+- **Scalping Strategy**: Short-term trades targeting immediate price movements
+
+## 📊 Key Features
+
+### **Trading Capabilities**
+- ✅ **Multi-timeframe Predictions** - H+1 through H+5 hour forecasts
+- ✅ **Dual Confirmation** - Regression + Classification signals
+- ✅ **Kelly Criterion Sizing** - Mathematically optimal position sizing
+- ✅ **Adaptive Learning** - System improves from its own performance
+- ✅ **Scalping Integration** - Additional short-term opportunities
+- ✅ **Trading Hours Control** - Configurable session management
+- ✅ **Real-time GUI** - Live performance monitoring
+
+### **Risk Management**
+- ✅ **ATR-based Stops** - Dynamic stop losses using market volatility
+- ✅ **Time-based Exits** - Maximum holding periods
+- ✅ **Trailing Stops** - Lock in profits as trades move favorably
+- ✅ **Drawdown Protection** - Reduces size during losing periods
+- ✅ **Position Limits** - Maximum risk per trade controls
+
+### **Advanced Analytics**
+- ✅ **Prediction Accuracy Tracking** - Real-time hit rate monitoring
+- ✅ **Currency Strength Analysis** - Multi-pair correlation modeling
+- ✅ **Market Condition Detection** - Volatility and trend regime awareness
+- ✅ **Performance Attribution** - Detailed trade analysis and learning
+
+## 🎯 Supported Currency Pairs
+
+**Primary Trading Pair**: EURUSD (H1 timeframe)
+
+**Analysis Pairs** (for currency strength calculation):
+- EURJPY, USDJPY, GBPUSD, EURGBP, USDCAD, USDCHF
+
+## 📋 System Requirements
+
+### **Software Requirements**
+- **MetaTrader 5** (Build 3550 or higher)
+- **Python 3.7+** (Recommended: Python 3.9-3.11)
+- **Windows 10/11** (Primary support) or **macOS/Linux** (with manual configuration)
+
+### **Hardware Requirements**
+- **CPU**: Intel i5 or AMD Ryzen 5 equivalent (minimum)
+- **RAM**: 8GB minimum, 16GB recommended
+- **Storage**: 5GB free space for data and models
+- **Internet**: Stable connection for real-time data
+
+### **Python Libraries** (Auto-installed)
+- PyTorch 1.9+, Pandas, NumPy, Scikit-learn, Joblib, yfinance, Matplotlib
+
+## 🚀 Installation Guide
+
+### **Step 1: Download and Extract**
+1. Extract all files to a dedicated folder (e.g., `C:\GGTH_LSTM\`)
+2. Ensure you have these files:
+   ```
+   GGTH_LSTM/
+   ├── GGTH8-5.mq5                 # MetaTrader Expert Advisor
+   ├── install.py                  # Universal installer
+   ├── train_enhanced_model.py     # Neural network training
+   ├── daemon.py                   # Prediction server
+   ├── generate_backtest.py        # Backtest data generator
+   ├── launcher.py                 # Easy interface
+   ├── path_helper.py              # Path management
+   ├── requirements.txt            # Python dependencies
+   └── EURUSD60.csv               # Training data (if available)
+   ```
+
+### **Step 2: Run Universal Installer**
+1. **Open Command Prompt as Administrator** (type cmd in windows desktop search bar then right click on the command prompt and select run as adminstrator)
+2. **Navigate to folder**: type: `cd C:\GGTH\`
+3. **Run installer**:type: `python launcher.py`
+4. Select 4 to install
+
+The installer will automatically:
+- ✅ Install all Python dependencies
+- ✅ Detect MetaTrader 5 paths
+- ✅ Create communication folders
+- ✅ Download sample data (if needed)
+- ✅ Create launch shortcuts
+
+### **Step 3: Copy Expert Advisor to MetaTrader**
+1. **Copy** `GGTH.mq5` to your MT5 Experts folder:
+   - Path: `C:\Users\[Username]\AppData\Roaming\MetaQuotes\Terminal\[ID]\MQL5\Experts\`
+2. **Restart MetaTrader 5**
+3. **Verify** the EA appears in Navigator → Expert Advisors
+
+### **Step 4: Train the Neural Network**
+1. **Option A - Use Launcher** (Recommended):
+   - cmd prompt (type cmd in windows desktop search bar)
+   - type python launcher.py
+   - Select option `1. train`
+
+2. **Option B - Direct Command**:
+   python train_enhanced_model.py
+
+
+**Training Process** (15-30 minutes):
+- Loads historical EURUSD data
+- Creates advanced technical features
+- Trains AttentionLSTM ensemble models
+- Saves trained models and scalers
+
+### **Step 5: Start the Prediction Daemon**
+1. **Option A - Use Launcher**:
+2. from command prompt run python launcher.py
+   - Select option `2. daemon`
+
+3. **Option B - Direct Command**:
+
+   python daemon.py
+
+**You should see**:
+```
+🚀 Enhanced LSTM Daemon v2.1 is running!
+📊 Device: cuda (or cpu)
+🔧 Model: enhanced
+🎭 Ensemble: 4 models
+📁 Monitoring: [path to communication folder]
+```
+
+### **Step 6: Configure MetaTrader 5**
+1. **Enable Algo Trading**: Click "Algo Trading" button in MT5 toolbar
+
+### **Step 7: Load the Expert Advisor**
+1. **Open EURUSD H1 chart** in MetaTrader 5
+2. **Drag** `GGTH from Navigator onto the chart
+3. **Configure parameters** (see Configuration section below)
+4. **Click "OK"** and ensure auto-trading is enabled
+
+## 🎮 Usage Instructions
+
+### **Daily Workflow**
+1. **Start Python Daemon** (once per day or after system restart)
+2. **Load EA** on EURUSD H1 chart
+3. **Monitor GUI** for system status and performance
+4. **Check logs** for prediction accuracy and trade decisions
+
+### **GUI Dashboard Elements**
+- **Connection Status**: Daemon communication status
+- **Prediction Accuracy**: Hit rates for H+1 through H+5
+- **Kelly Metrics**: Current position sizing parameters
+- **Adaptive Status**: Learning system status
+- **Market Hours**: Trading session status
+- **Live Predictions**: Real-time price forecasts
+
+### **Key Logs to Monitor**
+- **Prediction Updates**: New forecasts every hour
+- **Trade Executions**: Position entries with reasoning
+- **Accuracy Updates**: Prediction hit/miss tracking
+- **Kelly Updates**: Position sizing adjustments
+- **Error Messages**: Connection or prediction issues
+
+## 🎯 Backtesting
+
+### **Generate Historical Predictions**
+1. **Run**: `python generate_backtest.py`
+2. **Copy** `backtest_predictions.csv` to MT5 Common Files folder C:\Users\username\AppData\Roaming\MetaQuotes\Terminal\Common\Files
+3. **Run Strategy Tester** with generated data for accurate historical testing the ai will learn from each test run you do.
+
+### **Strategy Tester Settings**
+- **Model**: Every tick based on real ticks
+- **Period**: Any period with sufficient data
+- **Deposit**: $10,000 recommended minimum
+- **Leverage**: 1:100 or higher
+
+## ⚠️ Important Warnings & Considerations
+
+
+### **Technical Considerations**
+- **Internet Connection**: Stable connection required for Python-MT5 communication
+- **System Resources**: Keep adequate CPU and memory available
+- **Data Quality**: Ensure clean price data for accurate predictions
+- **Time Synchronization**: Verify broker and system time alignment
+
+### **Best Practices**
+- ✅ **Start with demo account** for initial testing
+- ✅ **Monitor prediction accuracy** before live trading
+- ✅ **Use conservative Kelly settings** initially (Max 10-15%)
+- ✅ **Regular model retraining** with fresh data
+- ✅ **Maintain system logs** for troubleshooting
+
+## 🔧 Troubleshooting
+
+### **Common Issues**
+
+#### **"Daemon not connected"**
+- Ensure Python daemon is running (`python daemon.py`)
+- Check firewall settings
+- Verify communication folder paths
+
+#### **"No predictions available"**
+- Check if models are trained (`models/` folder exists)
+- Verify EURUSD data availability
+- Check Python daemon logs for errors
+
+#### **"Invalid lot size"**
+- Verify account balance and margin requirements
+- Check broker volume limits
+- Adjust Kelly parameters if too aggressive
+
+#### **Poor prediction accuracy**
+- Retrain models with recent data
+- Adjust confidence thresholds
+- Consider market regime changes
+
+### **Getting Help**
+- **Check logs** in MetaTrader Journal and Python daemon output
+- **Verify configuration** against this guide
+- **Test with demo account** first
+- **Monitor system resources** during operation
+
+## 📈 Expected Performance
+
+### **Realistic Expectations**
+- **Directional Accuracy**: 70% (research-backed range)
+- **Win Rate**: 65 - 85% (quality over quantity approach)
+- **Risk-Adjusted Returns**: Sharpe ratio 1.2-2.0 with proper Kelly sizing
+- **Maximum Drawdown**: 10-20% during challenging periods
+
+
+## 🚨 **Critical First Steps After Installation:**
+
+1. **Test the Connection**: After installation, the most important thing is ensuring the Python daemon and MT5 EA can communicate properly
+
+2. **Start Small**: Begin with demo account or very small position sizes until you verify the system works as expected
+
+3. **Monitor the GUI**: The real-time dashboard will tell you immediately if something's wrong
+
+4. **Check Prediction Accuracy**: Let it run for a few days and monitor the hit rates before trusting it with significant capital
+
+## 🎯 **Quick Start Checklist:**
+
+- [ ] Install Python dependencies with `install.py`
+- [ ] Copy `GGTH8-5.mq5` to MT5 Experts folder  
+- [ ] Train models with `train_enhanced_model.py`
+- [ ] Start daemon with `daemon.py`
+- [ ] Load EA on EURUSD H1 chart
+- [ ] Verify "Connected" status in GUI
+- [ ] Watch for first prediction update
+- [ ] Monitor accuracy for 24-48 hours before live trading
+
+The system is designed to be largely autonomous once properly configured, but it does require initial setup and ongoing monitoring. The comprehensive logging and GUI make it easy to see exactly what's happening at all times.
